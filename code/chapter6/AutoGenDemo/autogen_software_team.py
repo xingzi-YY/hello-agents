@@ -12,17 +12,27 @@ load_dotenv()
 
 # 先测试一个版本，使用 OpenAI 客户端
 from autogen_ext.models.openai import OpenAIChatCompletionClient
+from autogen_core.models import ModelFamily
 from autogen_agentchat.agents import AssistantAgent, UserProxyAgent
 from autogen_agentchat.teams import RoundRobinGroupChat
 from autogen_agentchat.conditions import TextMentionTermination
 from autogen_agentchat.ui import Console
 
 def create_openai_model_client():
-    """创建 OpenAI 模型客户端用于测试"""
+    """创建 OpenAI 兼容模型客户端用于测试"""
     return OpenAIChatCompletionClient(
         model=os.getenv("LLM_MODEL_ID", "gpt-4o"),
         api_key=os.getenv("LLM_API_KEY"),
-        base_url=os.getenv("LLM_BASE_URL", "https://api.openai.com/v1")
+        base_url=os.getenv("LLM_BASE_URL", "https://api.openai.com/v1"),
+        # 非 OpenAI 官方模型名（如 DeepSeek、GLM 等）必须提供 model_info，
+        # 告诉 AutoGen 该模型支持的能力，否则初始化时报错
+        model_info={
+            "family": ModelFamily.UNKNOWN,
+            "vision": False,               # 是否支持图像输入
+            "function_calling": True,      # 是否支持工具/函数调用
+            "json_output": True,           # 是否支持 JSON 格式输出
+            "structured_output": False,    # 是否支持严格 JSON Schema 结构化输出
+        },
     )
 
 def create_product_manager(model_client):
